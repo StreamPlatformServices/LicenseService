@@ -16,7 +16,7 @@ namespace LicenseService.Persistance
         //protected override void OnModelCreating(ModelBuilder modelBuilder)
         //{
         //    modelBuilder.Entity<LicenseData>()
-        //        .HasIndex(l => new { l.ContentId, l.UserId })
+        //        .HasIndex(l => new { l.FileId, l.UserId })
         //        .IsUnique();
         //}
     }

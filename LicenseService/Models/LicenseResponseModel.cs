@@ -5,7 +5,7 @@ namespace LicenseService.Persistance.Data
     public class LicenseResponseModel
     {
         public Guid Uuid { get; set; }
-        public Guid ContentId { get; set; }
+        public Guid FileId { get; set; }
         public ContentEncryptionKey Key { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }

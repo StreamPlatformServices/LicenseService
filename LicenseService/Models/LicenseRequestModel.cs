@@ -4,7 +4,7 @@ namespace LicenseService.Persistance.Data
 {
     public class LicenseRequestModel
     {
-        public Guid ContentId { get; set; }
+        public Guid FileId { get; set; }
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public int? MaxPlayCount { get; set; }

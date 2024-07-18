@@ -9,7 +9,7 @@ namespace LicenseService.DataMappers
             return new LicenseData
             {
                 Uuid = Guid.NewGuid(),
-                ContentId = model.ContentId,
+                FileId = model.FileId,
                 StartTime = model.StartTime,
                 EndTime = model.EndTime,
                 MaxPlayCount = model.MaxPlayCount,
@@ -31,7 +31,7 @@ namespace LicenseService.DataMappers
             return new LicenseResponseModel
             {
                 Uuid = data.Uuid,
-                ContentId = data.ContentId,
+                FileId = data.FileId,
                 StartTime = data.StartTime,
                 EndTime = data.EndTime,
                 MaxPlayCount = data.MaxPlayCount,

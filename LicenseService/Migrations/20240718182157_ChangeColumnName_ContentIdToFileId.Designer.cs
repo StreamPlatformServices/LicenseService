@@ -3,6 +3,7 @@ using System;
 using LicenseService.Persistance;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace LicenseService.Migrations
 {
     [DbContext(typeof(LicenseDatabaseContext))]
-    partial class LicenseDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20240718182157_ChangeColumnName_ContentIdToFileId")]
+    partial class ChangeColumnName_ContentIdToFileId
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.7");
