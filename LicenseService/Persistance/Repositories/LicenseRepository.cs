@@ -1,5 +1,6 @@
 ﻿using LicenseService.Models;
 using LicenseService.Persistance.Data;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using System.Data.SqlClient;
 
@@ -47,6 +48,14 @@ namespace LicenseService.Persistance.Repositories
             }
             catch (DbUpdateException ex)
             {
+                if (ex.InnerException is SqliteException sqliteEx)
+                {
+                    if (sqliteEx.SqliteErrorCode == SQLitePCL.raw.SQLITE_CONSTRAINT)
+                    {
+                        _logger.LogError($"A conflict occurred while updating the database with new key: {sqliteEx.Message}");
+                        return ResultStatus.Conflict;
+                    }
+                }
                 if (ex.InnerException is SqlException sqlEx)
                 {
                     if (sqlEx.Number == UNIQUE_CONSTRAINT_VIOLATION_ERROR_NUMBER || sqlEx.Number == PRIMARY_KEY_VIOLATION_ERROR_NUMBER)

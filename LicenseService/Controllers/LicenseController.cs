@@ -1,7 +1,9 @@
+using KeyServiceAPI;
 using LicenseService.DataMappers;
 using LicenseService.Models;
 using LicenseService.Persistance.Data;
 using LicenseService.Persistance.Repositories;
+using LicenseService.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
@@ -15,17 +17,17 @@ namespace LicenseService.Controllers
     {
         //TODO: Now Communication with APIGateway!!!!!!!!!!!!!!!!!!
         private readonly ILogger<LicenseController> _logger;
-        private readonly ILicenseRepository _licenseRepository;
+        private readonly ILicenseFasade _licenseService;
         //TODO: Create Module To comunicate with KeyServiceAPI
         //TODO: Create an interface to make boundry between Controllers KeyServiceAPI and Database (check in Clean Architecture)
 
         //TODO: Maybe only key service will be on Blockchain ? 
         public LicenseController(
             ILogger<LicenseController> logger,
-            ILicenseRepository licenseRepository)
+            ILicenseFasade licenseService) //TODO: Create another class -> something like decorator...
         {
             _logger = logger;
-            _licenseRepository = licenseRepository;
+            _licenseService = licenseService;
         }
 
         [HttpGet("{userId}")]
@@ -33,7 +35,7 @@ namespace LicenseService.Controllers
         {
             _logger.LogInformation("Start get license by user id procedure.");
 
-            var result = await _licenseRepository.GetByUserIdAsync(userId);
+            var result = await _licenseService.GetByUserIdAsync(userId);
 
             if (result.Status == ResultStatus.NotFound)
             {
@@ -47,7 +49,7 @@ namespace LicenseService.Controllers
             }
 
             _logger.LogInformation("Finished successfully get license by user id procedure.");
-            return Ok(result.Data.ToLicenseListResponseModel());
+            return Ok(result.Data);
         }
 
         [HttpPut("{licenseId}")]
@@ -55,7 +57,7 @@ namespace LicenseService.Controllers
         {
             _logger.LogInformation("Start update license procedure.");
 
-            var result = await _licenseRepository.UpdateAsync(licenseId, licenseRequestModel.ToLicenseData());
+            var result = await _licenseService.UpdateAsync(licenseId, licenseRequestModel.ToLicenseData());
 
             if (result == ResultStatus.NotFound)
             {
@@ -77,7 +79,7 @@ namespace LicenseService.Controllers
         {
             _logger.LogInformation($"Start add new license procedure for user: {licenseRequestModel.UserId}.");
 
-            var result = await _licenseRepository.CreateAsync(licenseRequestModel.ToLicenseData());
+            var result = await _licenseService.CreateAsync(licenseRequestModel.ToLicenseData());
 
             if (result == ResultStatus.Conflict)
             {
@@ -98,7 +100,7 @@ namespace LicenseService.Controllers
         {
             _logger.LogInformation($"Start remove license procedure for user: {licenseId}.");
 
-            var result = await _licenseRepository.DeleteAsync(licenseId);
+            var result = await _licenseService.DeleteAsync(licenseId);
 
             if (result == ResultStatus.NotFound)
             {

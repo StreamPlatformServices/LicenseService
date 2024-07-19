@@ -6,7 +6,7 @@ namespace LicenseService.Persistance.Data
     {
         public Guid Uuid { get; set; }
         public Guid FileId { get; set; }
-        public ContentEncryptionKey Key { get; set; }
+        public byte[] Key { get; set; } 
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public int? MaxPlayCount { get; set; }
