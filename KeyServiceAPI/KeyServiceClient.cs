@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Net;
+using System.Text;
 
 namespace KeyServiceAPI
 {
@@ -68,6 +69,50 @@ namespace KeyServiceAPI
             {
                 _logger.LogError(ex, "JSON deserialization error occurred while trying to get key.");
                 return (ResultStatus.Failed, null);
+            }
+        }
+
+        //TODO: Test!!!!!!!
+        public async Task<ResultStatus> CreateEncryptionKeyAsync(Guid fileId)
+        {
+            //_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token); //TODO: Authorization on KeyService
+            var requestContent = new StringContent(
+                            JsonConvert.SerializeObject(new { fileId }),
+                            Encoding.UTF8,
+                            "application/json");
+            try
+            {
+                var response = await _httpClient.PostAsync($"{KEY_ENDPOINT}", requestContent);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        return ResultStatus.Success;
+                    }
+
+                    switch (response.StatusCode)
+                {
+                    case HttpStatusCode.Conflict:
+                        return ResultStatus.Conflict;
+                    case HttpStatusCode.Unauthorized:
+                        _logger.LogWarning("Request should be blocked in APIGateway middleware!"); //TODO:
+                        return ResultStatus.AccessDenied;
+                    case HttpStatusCode.Forbidden:
+                        _logger.LogWarning("Request should be blocked in APIGateway middleware!");
+                        return ResultStatus.AccessDenied;
+                }
+
+                _logger.LogError($"Unexpected error in response while trying to get key. Message: {response.ReasonPhrase}");
+                return ResultStatus.Failed;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "HTTP request error occurred while trying to get key.");
+                return ResultStatus.Failed;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "JSON deserialization error occurred while trying to get key.");
+                return ResultStatus.Failed;
             }
         }
     }

@@ -5,5 +5,6 @@ namespace KeyServiceAPI
     public interface IKeyServiceClient
     {
         Task<(ResultStatus Status, EncryptionKeyModel KeyData)> GetEncryptionKeyAsync(Guid fileId);
+        Task<ResultStatus> CreateEncryptionKeyAsync(Guid fileId);
     }
 }
