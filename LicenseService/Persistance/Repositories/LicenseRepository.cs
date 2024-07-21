@@ -1,4 +1,5 @@
-﻿using LicenseService.Models;
+﻿using KeyServiceAPI.Models;
+using LicenseService.Models;
 using LicenseService.Persistance.Data;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
@@ -22,6 +23,23 @@ namespace LicenseService.Persistance.Repositories
             _licenseDatabaseContext = licenseDatabaseContext;
         }
 
+        public async Task<(ResultStatus Status, LicenseData? Data)> GetByUserAndFileIdAsync(
+            Guid userId,
+            Guid fileId)
+        {
+            var licenseDataResult = await _licenseDatabaseContext.Licenses
+                .FirstOrDefaultAsync(e => e.UserId == userId && e.FileId == fileId);
+                
+            if (licenseDataResult == null)
+            {
+                _logger.LogInformation($"License for user with id: {userId} not found!");
+                return (ResultStatus.NotFound, null);
+            }
+
+            return (ResultStatus.Success, licenseDataResult);
+        }
+
+        //TODO: Remove???
         public async Task<(ResultStatus Status, IEnumerable<LicenseData> Data)> GetByUserIdAsync(Guid userId)
         {
             //Create Decorator, Adapter, Proxy or other module to fill the key data
@@ -126,5 +144,7 @@ namespace LicenseService.Persistance.Repositories
                 return ResultStatus.Failed;
             }
         }
+
+        
     }
 }

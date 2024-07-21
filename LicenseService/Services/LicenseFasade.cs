@@ -1,16 +1,17 @@
 ﻿using KeyServiceAPI;
+using KeyServiceAPI.Models;
 using LicenseService.DataMappers;
 using LicenseService.Models;
 using LicenseService.Persistance.Data;
 using LicenseService.Persistance.Repositories;
-using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace LicenseService.Services
 {
     //TODO: Create EntityComponent!!!!!!!!!!! or Just create an entityModel in separate folder
     //TODO: It is less code with exceptions ()think if there is a need to change this approach(maybe not becasue you have example of usage Task.WhenAll with results)
 
-    public class LicenseFasade : ILicenseFasade //TODO: Change name to licenseFasade
+    public class LicenseFasade : ILicenseFasade
     {
         ILicenseRepository _licenseRepository;
         IKeyServiceClient _keyServiceClient;
@@ -22,7 +23,26 @@ namespace LicenseService.Services
             _keyServiceClient = keyServiceClient;
         }
 
-        
+        public async Task<(ResultStatus Status, LicenseResponseModel? Data)> GetByUserAndFileIdAsync(Guid userId, Guid fileId)
+        {
+            var licenseResult = await _licenseRepository.GetByUserAndFileIdAsync(userId, fileId);
+
+            if (licenseResult.Status != ResultStatus.Success)
+            {
+                return (licenseResult.Status, null);
+            }
+
+            var licenseModel = licenseResult.Data.ToLicenseResponseModel();
+
+            var result = await UpdateLicenseWithEncryptionKeyAsync(licenseModel);
+
+            if (result != ResultStatus.Success)
+            {
+                return (result, null);
+            }
+
+            return (ResultStatus.Success, licenseModel);
+        }
         //TODO: Maybe this method will be not needed (Get License By FileId and UserId!!!!!) NOW!!!!!!!!!!!!!!!
         public async Task<(ResultStatus Status, IEnumerable<LicenseResponseModel> Data)> GetByUserIdAsync(Guid userId) //TOOD: return null when failed?
         {
@@ -64,7 +84,7 @@ namespace LicenseService.Services
                 return keyResult.Status;
             }
 
-            licenseModel.Key = keyResult.KeyData;
+            licenseModel.KeyData = new Models.EncryptionKeyModel { Key = keyResult.KeyData.Key, IV = keyResult.KeyData.IV };
 
             return ResultStatus.Success;
         }
@@ -82,5 +102,7 @@ namespace LicenseService.Services
         {
             return await _licenseRepository.UpdateAsync(uuid, licenseData);
         }
+
+        
     }
 }

@@ -1,4 +1,5 @@
-﻿using LicenseService.Persistance.Data;
+﻿using LicenseService.Models;
+using LicenseService.Persistance.Data;
 
 namespace LicenseService.DataMappers
 {

@@ -1,4 +1,5 @@
 using KeyServiceAPI;
+using KeyServiceAPI.Models;
 using LicenseService.DataMappers;
 using LicenseService.Models;
 using LicenseService.Persistance.Data;
@@ -30,12 +31,12 @@ namespace LicenseService.Controllers
             _licenseService = licenseService;
         }
 
-        [HttpGet("{userId}")]
-        public async Task<IActionResult> GetLicenseByUserIdAsync(Guid userId)
+        [HttpGet]
+        public async Task<IActionResult> GetLicenseByUserAndFileIdAsync([FromQuery] Guid userId, Guid fileId)
         {
             _logger.LogInformation("Start get license by user id procedure.");
 
-            var result = await _licenseService.GetByUserIdAsync(userId);
+            var result = await _licenseService.GetByUserAndFileIdAsync(userId, fileId);
 
             if (result.Status == ResultStatus.NotFound)
             {
