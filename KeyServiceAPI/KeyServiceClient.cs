@@ -1,7 +1,9 @@
 ﻿using KeyServiceAPI.Models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Net;
+using System.Net.Http.Headers;
 using System.Text;
 
 namespace KeyServiceAPI
@@ -113,6 +115,58 @@ namespace KeyServiceAPI
             {
                 _logger.LogError(ex, "JSON deserialization error occurred while trying to get key.");
                 return ResultStatus.Failed;
+            }
+        }
+
+        public async Task<ResultStatus> DeleteEncryptionKeyAsync(Guid fileId)
+        {
+            //_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            try
+            {
+                var requestContent = new StringContent(
+                    JsonConvert.SerializeObject(new { fileId }),
+                    Encoding.UTF8,
+                    "application/json");
+
+                var request = new HttpRequestMessage
+                {
+                    Method = HttpMethod.Delete,
+                    RequestUri = new Uri(_httpClient.BaseAddress, KEY_ENDPOINT),
+                    Content = requestContent
+                };
+
+                var response = await _httpClient.SendAsync(request);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return ResultStatus.Success;
+                }
+
+                switch (response.StatusCode)
+                {
+                    case HttpStatusCode.NotFound:
+                        return ResultStatus.NotFound;
+                    case HttpStatusCode.Unauthorized:
+                        _logger.LogWarning("Request should be blocked in APIGateway middleware!"); //TODO:
+                        return ResultStatus.AccessDenied;
+                    case HttpStatusCode.Forbidden:
+                        _logger.LogWarning("Request should be blocked in APIGateway middleware!");
+                        return ResultStatus.AccessDenied;
+                }
+
+                _logger.LogError($"Unexpected error in response while trying to remove key. Message: {response.ReasonPhrase}");
+                return ResultStatus.Failed;
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "HTTP request error occurred while trying to remove key.");
+                throw;
+            }
+            catch (JsonException ex)
+            {
+                _logger.LogError(ex, "JSON deserialization error occurred while trying to remove key.");
+                throw;
             }
         }
     }
