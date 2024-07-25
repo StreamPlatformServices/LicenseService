@@ -1,5 +1,6 @@
 using APIGatewayMain.ServiceCollectionExtensions;
 using APIGatewayMain.ServiceCollectionExtensions.ComponentsExtensions;
+using LicenseService.Configuration;
 using LicenseService.Persistance;
 using LicenseService.Persistance.Repositories;
 using LicenseService.Services;
@@ -8,6 +9,9 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCommonConfiguration(builder.Configuration);
+
+var kestrelSettings = builder.Configuration.GetSection("KestrelSettings").Get<KestrelSettings>() ?? throw new Exception("Fatal error: Please provide kestrel configuration");
+builder.AddKestrelSettings(kestrelSettings);
 
 // Add services to the container.
 builder.Services.AddDbContext<LicenseDatabaseContext>(options =>
@@ -18,21 +22,43 @@ builder.Services.AddKeyServiceAPI();
 builder.Services.AddScoped<ILicenseRepository, LicenseRepository>();
 builder.Services.AddScoped<ILicenseFasade, LicenseFasade>();
 
+var corsPolicyName = "CustomCorsPolicy";
+var corsSettings = builder.Configuration.GetSection("CorsSettings").Get<CorsSettings>() ?? throw new Exception("Fatal error: Please provide CorsSettings configuration");
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(corsPolicyName,
+        policy =>
+        {
+            policy.WithOrigins(corsSettings.AllowedHosts)
+                .WithHeaders(corsSettings.AllowedHeaders)
+                .WithMethods(corsSettings.AllowedMethods);
+        });
+});
+
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+var useSwagger = builder.Configuration.GetSection("UseSwagger").Get<bool>();
+if (useSwagger)
+{
+    // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen();
+}
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (useSwagger)
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.UseCors(corsPolicyName);
+
+if (kestrelSettings.UseTls)
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthorization();
 
