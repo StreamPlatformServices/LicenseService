@@ -50,7 +50,11 @@ var app = builder.Build();
 if (useSwagger)
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "LicenseService API V1");
+        c.RoutePrefix = string.Empty;
+    });
 }
 
 app.UseCors(corsPolicyName);
