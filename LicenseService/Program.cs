@@ -8,6 +8,14 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var configPath = Path.GetFullPath(builder.Configuration["ConfigPath"] ?? Directory.GetCurrentDirectory());
+var databasePath = Path.GetFullPath(builder.Configuration["DatabasePath"] ?? Directory.GetCurrentDirectory());
+
+builder.Configuration.SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile(Path.Combine(configPath, "appsettings.json"), optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables();
+
 builder.Services.AddCommonConfiguration(builder.Configuration);
 
 var kestrelSettings = builder.Configuration.GetSection("KestrelSettings").Get<KestrelSettings>() ?? throw new Exception("Fatal error: Please provide kestrel configuration");
@@ -15,7 +23,7 @@ builder.AddKestrelSettings(kestrelSettings);
 
 // Add services to the container.
 builder.Services.AddDbContext<LicenseDatabaseContext>(options =>
-            options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+            options.UseSqlite($"Data Source={databasePath}/license.db"));
 
 //TODO: AddKeyServiceCLient?? (change name of API components to Client???)
 builder.Services.AddKeyServiceAPI();
